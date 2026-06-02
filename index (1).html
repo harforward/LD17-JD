@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JD17 · District Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --blue:#003087;--blue2:#0047B3;--gold:#B8810A;--teal:#00796B;
+  --coral:#B83232;--purple:#5B21B6;--emerald:#065F46;--slate:#334155;
+  --bg:#F0EEE9;--surface:#FAFAF8;--card:#FFFFFF;
+  --border:#D4D0C8;--border2:#E8E5DF;
+  --txt:#111827;--muted:#52525B;--faint:#94949E;
+  --sh:0 1px 2px rgba(0,0,0,0.05),0 2px 6px rgba(0,0,0,0.04);
+  --sh2:0 4px 16px rgba(0,0,0,0.07),0 1px 3px rgba(0,0,0,0.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* ─── LOGIN ─── */
+#login-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  background:linear-gradient(180deg,
+    #4A5568 0%,#5B6478 8%,#6B7080 18%,#7A7482 30%,
+    #897480 42%,#937882 52%,#9B7E86 60%,
+    #967885 68%,#8B6E7C 76%,#7A6070 84%,
+    #5C4A58 92%,#3D3040 100%);
+}
+#login-screen::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 90% 45% at 50% 58%,rgba(160,110,120,.45) 0%,transparent 70%),
+    radial-gradient(ellipse 60% 25% at 30% 65%,rgba(120,90,105,.25) 0%,transparent 55%),
+    radial-gradient(ellipse 100% 15% at 50% 100%,rgba(40,25,40,.6) 0%,transparent 100%);
+}
+#login-screen::after{content:'';position:absolute;top:0;left:0;right:0;height:40%;background:linear-gradient(to bottom,rgba(55,65,88,.3) 0%,transparent 100%)}
+.login-horizon{position:absolute;top:58%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(200,170,175,.3) 30%,rgba(210,180,185,.45) 50%,rgba(200,170,175,.3) 70%,transparent 95%)}
+
+.login-card{
+  position:relative;z-index:10;width:min(360px,88vw);
+  background:rgba(255,252,255,.06);border:1px solid rgba(255,255,255,.2);
+  border-radius:0;padding:48px 40px 36px;
+  backdrop-filter:blur(22px) saturate(1.1) brightness(1.05);
+  -webkit-backdrop-filter:blur(22px) saturate(1.1) brightness(1.05);
+  box-shadow:0 0 0 .5px rgba(220,200,210,.18),0 24px 80px rgba(30,20,35,.45),inset 0 1px 0 rgba(255,255,255,.1);
+  animation:cardIn .8s cubic-bezier(.16,1,.3,1) both;display:flex;flex-direction:column;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+
+.l-jd17{font-family:'Cormorant Garamond',serif;font-size:54px;font-weight:300;letter-spacing:.14em;color:rgba(240,236,245,.95);text-align:center;line-height:1;text-shadow:0 2px 24px rgba(20,15,30,.6)}
+.l-sub{font-size:8.5px;font-weight:500;letter-spacing:.45em;text-transform:uppercase;color:rgba(210,200,220,.5);text-align:center;margin-top:8px}
+.l-rule{width:24px;height:1px;background:rgba(200,185,210,.3);margin:24px auto}
+.l-field input{
+  width:100%;padding:13px 16px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.18);border-radius:0;
+  color:rgba(245,242,248,.95);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;
+  transition:border-color .2s,background .2s;letter-spacing:.08em;
+}
+.l-field input::placeholder{color:rgba(220,210,225,.4);letter-spacing:.2em;font-size:10px;font-weight:500;text-transform:uppercase}
+.l-field input:focus{border-color:rgba(210,185,210,.55);background:rgba(255,255,255,.1)}
+.l-err{display:none;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,140,100,.9);text-align:center;margin-top:10px}
+.l-btn{
+  width:100%;margin-top:18px;padding:13px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.2);border-radius:0;
+  font-family:'DM Sans',sans-serif;font-size:8.5px;font-weight:600;
+  letter-spacing:.38em;text-transform:uppercase;color:rgba(230,225,238,.85);
+  cursor:pointer;transition:background .2s,border-color .2s;
+}
+.l-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(210,190,220,.45)}
+.l-footer{margin-top:20px;text-align:center;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(210,200,220,.3)}
+
+/* ─── APP SHELL ─── */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.active{display:flex}
+
+.hdr{background:#fff;border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--sh)}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.hdr-seal svg{width:32px;height:32px}
+.hdr-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--blue);letter-spacing:.02em;line-height:1.1}
+.hdr-sub{font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.hdr-badge{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:0;background:rgba(0,48,135,.06);color:var(--blue);border:1px solid rgba(0,48,135,.12)}
+.btn-out{font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);padding:5px 13px;border-radius:0;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-out:hover{border-color:var(--txt);color:var(--txt)}
+
+/* ─── TABS ─── */
+.tabs{background:#fff;border-bottom:1px solid var(--border);padding:0 28px;display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:56px;z-index:190}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:0 18px;height:44px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--muted);cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s}
+.tab:hover{color:var(--txt)}
+.tab.on{font-weight:600}
+.tab.on.te{color:var(--blue);border-color:var(--blue)}
+.tab.on.tf{color:var(--teal);border-color:var(--teal)}
+.tab.on.tn{color:var(--gold);border-color:var(--gold)}
+.tab.on.ts{color:var(--purple);border-color:var(--purple)}
+.tab.on.th{color:var(--coral);border-color:var(--coral)}
+.tab.on.ta{color:var(--slate);border-color:var(--slate)}
+.tab.on.tl{color:var(--teal);border-color:var(--teal)}
+.tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* ─── PANELS ─── */
+.body{flex:1;overflow-y:auto}
+.pnl{display:none;padding:24px 28px 48px;max-width:1320px;margin:0 auto;animation:pIn .28s ease both}
+.pnl.on{display:block}
+@keyframes pIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ─── HERO ─── */
+.hero{border-radius:0;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--sh2)}
+.hero-inner{padding:36px 40px 28px;position:relative;z-index:2}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#001A5C 0%,#003087 45%,#0047B3 100%)}
+.hero-bg::after{content:'';position:absolute;top:0;right:0;bottom:0;width:50%;background:radial-gradient(ellipse 80% 80% at 80% 50%,rgba(245,166,35,.12) 0%,transparent 65%)}
+.hero-eyebrow{font-size:9px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:rgba(245,200,80,.75);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.hero-eyebrow::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.1);max-width:120px}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:#fff;line-height:1.15;letter-spacing:.01em}
+.hero-title strong{font-weight:600}
+
+/* Hero 2-col layout */
+.hero-body{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start}
+.hero-left{}
+.hero-right{display:flex;flex-direction:column;gap:12px;align-items:flex-end}
+
+/* Stat cluster */
+.hero-stats{display:flex;gap:0;border-left:1px solid rgba(255,255,255,.12);margin-top:4px}
+.hstat{padding:12px 24px;border-right:1px solid rgba(255,255,255,.1);text-align:center}
+.hstat:last-child{border-right:none}
+.hstat-num{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;color:#fff;line-height:1}
+.hstat-num sup{font-size:18px;opacity:.6;vertical-align:super}
+.hstat-lbl{font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:4px}
+
+/* Live status strip */
+.hero-status{display:flex;gap:0;margin-top:20px;border-top:1px solid rgba(255,255,255,.08);padding-top:16px}
+.hstatus-item{display:flex;align-items:center;gap:7px;padding:0 16px 0 0;margin-right:16px;border-right:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.6)}
+.hstatus-item:last-child{border-right:none}
+.hstatus-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-green{background:#34D399}
+.dot-amber{background:#FBB040}
+.dot-red{background:#F87171}
+
+/* Next actions panel inside hero */
+.hero-next{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:14px 16px;min-width:220px}
+.hero-next-title{font-size:8.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:10px}
+.hero-next-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:11.5px;color:rgba(255,255,255,.75);line-height:1.4}
+.hero-next-item:last-child{margin-bottom:0}
+.hn-icon{font-size:12px;flex-shrink:0;margin-top:1px}
+
+/* ─── SNAPSHOT STRIP ─── */
+.snap-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:0;overflow:hidden;background:#fff;box-shadow:var(--sh)}
+.snap{padding:18px 20px;border-right:1px solid var(--border);position:relative;overflow:hidden;transition:background .15s}
+.snap:last-child{border-right:none}
+.snap:hover{background:rgba(0,48,135,.02)}
+.snap-accent{position:absolute;top:0;left:0;right:0;height:2px}
+.snap-lbl{font-size:8.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.snap-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;line-height:1;color:var(--txt)}
+.snap-delta{font-size:10.5px;margin-top:6px;display:flex;align-items:center;gap:3px}
+.up{color:#059669}.dn{color:#DC2626}.neu{color:var(--faint)}
+
+/* ─── SECTION HEADER ─── */
+.sh{display:flex;align-items:baseline;gap:12px;margin:20px 0 12px}
+.sh h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--txt)}
+.sh-line{flex:1;height:1px;background:var(--border2)}
+.sh-sub{font-size:11px;color:var(--faint)}
+
+/* ─── CARDS ─── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:0;padding:20px;box-shadow:var(--sh)}
+.card-hd{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border2)}
+.chart-box{position:relative;width:100%}
+
+/* ─── GRIDS ─── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.gcol{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+
+/* ─── CONCERN LIST ─── */
+.clist-item{display:grid;grid-template-columns:28px 1fr auto auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border2)}
+.clist-item:last-child{border-bottom:none}
+.ci-num{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--border);text-align:center}
+.ci-name{font-size:12.5px;font-weight:500;color:var(--txt)}
+.ci-meta{font-size:10.5px;color:var(--faint);margin-top:1px}
+.ci-count{font-size:11px;font-weight:600;color:var(--muted);text-align:right;white-space:nowrap}
+.tag{display:inline-block;padding:2px 8px;font-size:9.5px;font-weight:700;letter-spacing:.06em;border-radius:0}
+.t-hi{background:rgba(184,50,50,.08);color:var(--coral)}
+.t-ri{background:rgba(184,129,10,.1);color:var(--gold)}
+.t-st{background:rgba(0,48,135,.06);color:var(--blue)}
+.t-em{background:rgba(0,121,107,.08);color:var(--teal)}
+.t-new{background:rgba(91,33,182,.07);color:var(--purple)}
+
+/* ─── FUNNEL ─── */
+.funnel-row{margin-bottom:11px}
+.funnel-hdr{display:flex;justify-content:space-between;margin-bottom:5px}
+.funnel-lbl{font-size:12px;font-weight:500;color:var(--txt)}
+.funnel-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.funnel-track{height:6px;background:var(--border2);border-radius:0;overflow:hidden}
+.funnel-fill{height:100%;transition:width 1s cubic-bezier(.34,1.56,.64,1)}
+
+/* ─── TABLE ─── */
+.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt th{text-align:left;padding:8px 12px;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);border-bottom:2px solid var(--border);background:var(--bg);white-space:nowrap}
+.dt td{padding:8px 12px;border-bottom:1px solid var(--border2);vertical-align:middle}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:rgba(0,48,135,.018)}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+
+/* ─── MAY LIVE DATA ─── */
+.live-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#059669;border-radius:0}
+.live-dot{width:5px;height:5px;border-radius:50%;background:#34D399;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Case cards */
+.case-card{border:1px solid var(--border);border-radius:0;padding:14px;background:#fff;border-left:3px solid var(--coral)}
+.case-card.c-info{border-left-color:var(--blue)}
+.case-card.c-warn{border-left-color:var(--gold)}
+.cc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.cc-name{font-size:12.5px;font-weight:600;color:var(--txt)}
+.cc-loc{font-size:10px;color:var(--faint)}
+.cc-body{font-size:12px;color:var(--muted);line-height:1.55}
+
+/* Session row */
+.session-row{display:grid;grid-template-columns:80px 90px 1fr 55px 55px 55px 45px;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border2);font-size:11.5px;align-items:center}
+.session-row:hover{background:rgba(0,48,135,.018)}
+.sr-hdr{background:var(--bg);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);border-bottom:2px solid var(--border)}
+.sr-date{color:var(--muted);font-family:'DM Mono',monospace;font-size:10.5px}
+.sr-num{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+
+/* ─── TIMELINE ─── */
+.tl{position:relative}
+.tl::before{content:'';position:absolute;left:13px;top:0;bottom:0;width:1px;background:var(--border)}
+.tl-item{display:flex;gap:16px;margin-bottom:16px}
+.tl-dot{width:26px;height:26px;border-radius:0;flex-shrink:0;z-index:1;display:flex;align-items:center;justify-content:center;font-size:12px}
+.tl-body{flex:1;padding-top:2px}
+.tl-date{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+.tl-title{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:3px}
+.tl-desc{font-size:11.5px;color:var(--muted);line-height:1.55}
+
+/* ─── ANOMALY ─── */
+.anom{display:flex;gap:12px;padding:13px;margin-bottom:10px;align-items:flex-start;border-left:3px solid}
+.an-hi{background:#FFF7ED;border-color:#F97316}
+.an-md{background:#FFFBEB;border-color:#F59E0B}
+.an-ok{background:#F0FDF4;border-color:#22C55E}
+.an-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.an-title{font-size:12px;font-weight:700;margin-bottom:3px}
+.an-hi .an-title{color:#C2410C}
+.an-md .an-title{color:#92400E}
+.an-ok .an-title{color:#15803D}
+.an-body{font-size:11px;line-height:1.6;color:#6B6050}
+
+/* ─── AUDIT ROWS ─── */
+.aud-row{display:grid;grid-template-columns:96px 1fr 64px 64px 64px 50px;gap:6px;padding:7px 12px;border-bottom:1px solid var(--border2);font-size:11.5px;align-items:center}
+.aud-row:hover{background:rgba(0,48,135,.018)}
+.aud-hdr{background:var(--bg);font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);border-bottom:2px solid var(--border)}
+.ar{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.adt{color:var(--muted);font-family:'DM Mono',monospace;font-size:10px}
+
+/* ─── FORECAST SLIDERS ─── */
+.sl-wrap{margin-bottom:15px}
+.sl-hdr{display:flex;justify-content:space-between;margin-bottom:4px}
+.sl-name{font-size:12px;font-weight:500}
+.sl-val{font-size:12.5px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums}
+.sl-hint{font-size:10px;color:var(--faint);margin-bottom:5px}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;border-radius:0;background:var(--border);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:0;background:var(--blue);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.proj-box{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:rgba(0,48,135,.04);border:1px solid rgba(0,48,135,.1);padding:14px;margin-top:14px}
+.proj-num{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--blue)}
+.proj-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:2px}
+
+/* ─── TOWN TAG ─── */
+.town-tag{display:inline-block;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.05em;border-radius:0}
+.tt-ft{background:rgba(0,121,107,.08);color:var(--teal)}
+.tt-nb{background:rgba(184,129,10,.1);color:var(--gold)}
+.tt-sbb{background:rgba(91,33,182,.07);color:var(--purple)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px){
+  .snap-strip{grid-template-columns:repeat(3,1fr)}
+  .g3,.g4{grid-template-columns:repeat(2,1fr)}
+  .gcol{grid-template-columns:1fr}
+  .hero-body{grid-template-columns:1fr}
+  .hero-right{align-items:flex-start}
+  .hstat-num{font-size:28px}
+}
+@media(max-width:600px){
+  .snap-strip{grid-template-columns:repeat(2,1fr)}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .pnl{padding:14px 14px 40px}
+  .hdr,.tabs{padding:0 14px}
+  .hero-inner{padding:24px 20px 20px}
+  .hero-stats{flex-wrap:wrap}
+  .hstat-num{font-size:24px}
+  .session-row{grid-template-columns:70px 1fr 50px 50px 50px}
+  .sr-col-h{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="login-screen">
+  <div class="login-horizon"></div>
+  <div class="login-card">
+    <div class="l-jd17">JD17</div>
+    <div class="l-sub">Dashboard</div>
+    <div class="l-rule"></div>
+    <div class="l-field">
+      <input type="password" id="pwd" placeholder="Access Code" autocomplete="current-password"/>
+    </div>
+    <div class="l-err" id="l-err">Authorization failed. Try again.</div>
+    <button class="l-btn" onclick="doLogin()">Enter</button>
+    <div class="l-footer">Authorized Access Only</div>
+  </div>
+</div>
+
+<!-- ════════════ APP ════════════ -->
+<div id="app">
+
+  <header class="hdr">
+    <div class="hdr-l">
+      <div class="hdr-seal">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" fill="#003087"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(245,200,100,.4)" stroke-width=".8"/>
+          <ellipse cx="50" cy="34" rx="14" ry="9" fill="none" stroke="rgba(255,210,100,.8)" stroke-width="1.2"/>
+          <rect x="36" y="34" width="28" height="4" fill="rgba(255,210,100,.5)"/>
+          <path d="M39 43 L39 60 Q50 67 61 60 L61 43 Z" fill="rgba(0,40,120,.5)" stroke="rgba(255,200,80,.9)" stroke-width="1.2"/>
+          <line x1="43" y1="51" x2="57" y2="51" stroke="rgba(255,200,80,.7)" stroke-width=".8"/>
+          <line x1="43" y1="55" x2="57" y2="55" stroke="rgba(255,200,80,.7)" stroke-width=".8"/>
+          <ellipse cx="30" cy="56" rx="4.5" ry="7" fill="none" stroke="rgba(255,200,80,.6)" stroke-width="1"/>
+          <ellipse cx="70" cy="56" rx="4.5" ry="7" fill="none" stroke="rgba(255,200,80,.6)" stroke-width="1"/>
+          <text x="50" y="86" text-anchor="middle" fill="rgba(245,200,100,.85)" font-size="6" font-family="serif" letter-spacing=".8">NEW JERSEY</text>
+        </svg>
+      </div>
+      <div>
+        <div class="hdr-name">Assemblyman Joe Danielsen – LD17</div>
+        <div class="hdr-sub">Constituent Outreach Dashboard</div>
+      </div>
+    </div>
+    <div class="hdr-r">
+      <span class="hdr-badge">Authorized</span>
+      <button class="btn-out" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on te" onclick="showTab('ov','te',this)"><span class="tdot" style="background:var(--blue)"></span>Overview</button>
+    <button class="tab" onclick="showTab('may','te',this)" data-active="te"><span class="tdot" style="background:#34D399"></span>May 2026 <span class="live-badge" style="margin-left:6px"><span class="live-dot"></span>Live</span></button>
+    <button class="tab tf" onclick="showTab('ft','tf',this)"><span class="tdot" style="background:var(--teal)"></span>Franklin Twp</button>
+    <button class="tab tn" onclick="showTab('nb','tn',this)"><span class="tdot" style="background:var(--gold)"></span>North Brunswick</button>
+    <button class="tab ts" onclick="showTab('sbb','ts',this)"><span class="tdot" style="background:var(--purple)"></span>South Bound Brook</button>
+    <button class="tab th" onclick="showTab('hist','th',this)"><span class="tdot" style="background:var(--coral)"></span>2024–25 Record</button>
+    <button class="tab ta" onclick="showTab('audit','ta',this)"><span class="tdot" style="background:var(--slate)"></span>Audit</button>
+    <button class="tab tl" onclick="showTab('lab','tl',this)"><span class="tdot" style="background:var(--teal)"></span>Forecast Lab</button>
+  </nav>
+
+  <main class="body">
+
+    <!-- ══ OVERVIEW ══ -->
+    <div class="pnl on" id="p-ov">
+
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-body">
+            <div class="hero-left">
+              <div class="hero-eyebrow">2026 Season · Active · LD17 Three-Municipality Program</div>
+              <div class="hero-title">Constituent<br/><strong>Outreach Program</strong></div>
+              <div class="hero-stats" style="margin-top:20px">
+                <div class="hstat"><div class="hstat-num">854</div><div class="hstat-lbl">Total Calls '26</div></div>
+                <div class="hstat"><div class="hstat-num">96<sup>%</sup></div><div class="hstat-lbl">Satisfaction</div></div>
+                <div class="hstat"><div class="hstat-num">22</div><div class="hstat-lbl">Cases / Concerns</div></div>
+                <div class="hstat"><div class="hstat-num">3</div><div class="hstat-lbl">Municipalities</div></div>
+              </div>
+              <div class="hero-status">
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>Franklin Twp — Active (W5 underway)</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-amber"></span>North Brunswick — Awaiting next rotation</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-amber"></span>South Bound Brook — Awaiting next rotation</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>Bilingual agent on staff</div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div class="hero-next">
+                <div class="hero-next-title">Current &amp; Upcoming</div>
+                <div class="hero-next-item"><span class="hn-icon">📞</span>May W5: D46 + D49 active — 176 calls logged this week</div>
+                <div class="hero-next-item"><span class="hn-icon">⚠️</span>5 open cases from May — 2 require follow-up</div>
+                <div class="hero-next-item"><span class="hn-icon">📍</span>NB + SBB rotation recommended after W5</div>
+                <div class="hero-next-item"><span class="hn-icon">🗣️</span>New concerns: ICE activity, LGBTQ safety, library racial bias</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SNAPSHOT -->
+      <div class="snap-strip">
+        <div class="snap"><div class="snap-accent" style="background:var(--blue)"></div><div class="snap-lbl">Total Calls 2026</div><div class="snap-val">854</div><div class="snap-delta neu">Apr + May W5</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--teal)"></div><div class="snap-lbl">Constituents Reached</div><div class="snap-val">121</div><div class="snap-delta up">↑ 14.2% answer rate</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--gold)"></div><div class="snap-lbl">Engaged in Conv.</div><div class="snap-val">74</div><div class="snap-delta neu">61% of answered</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Cases Opened</div><div class="snap-val">22</div><div class="snap-delta up">↑ 17 Apr + 5 May</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--emerald)"></div><div class="snap-lbl">Satisfaction</div><div class="snap-val">96%</div><div class="snap-delta up">↑ Office interaction</div></div>
+      </div>
+
+      <div class="g2" style="margin-bottom:12px">
+        <div class="card">
+          <div class="card-hd">Call Volume by Month — 2026</div>
+          <div class="chart-box" style="height:200px"><canvas id="c-ov-calls"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Top Active Concerns — Program Year 2026</div>
+          <div class="clist-item">
+            <div class="ci-num">1</div>
+            <div><div class="ci-name">Overdevelopment &amp; Infrastructure Stress</div><div class="ci-meta">Traffic, noise, congestion · All municipalities</div></div>
+            <div class="tag t-hi">Persistent</div>
+            <div class="ci-count">~9 cases</div>
+          </div>
+          <div class="clist-item">
+            <div class="ci-num">2</div>
+            <div><div class="ci-name">Municipal Trust Deficit</div><div class="ci-meta">Feeling unheard by local officials · SBB/FT</div></div>
+            <div class="tag t-ri">Rising</div>
+            <div class="ci-count">~6 cases</div>
+          </div>
+          <div class="clist-item">
+            <div class="ci-num">3</div>
+            <div><div class="ci-name">Affordability — Taxes, Energy, Housing</div><div class="ci-meta">Fixed income + rising costs · NB/FT</div></div>
+            <div class="tag t-ri">Rising</div>
+            <div class="ci-count">~5 cases</div>
+          </div>
+          <div class="clist-item">
+            <div class="ci-num">4</div>
+            <div><div class="ci-name">Federal Safety Concerns</div><div class="ci-meta">ICE activity, LGBTQ rights — new in May '26</div></div>
+            <div class="tag t-new">New</div>
+            <div class="ci-count">1 case</div>
+          </div>
+          <div class="clist-item">
+            <div class="ci-num">5</div>
+            <div><div class="ci-name">Senior Care &amp; Healthcare Access</div><div class="ci-meta">Medicare gap, bathroom repair aid</div></div>
+            <div class="tag t-em">Emerging</div>
+            <div class="ci-count">~3 cases</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g2" style="margin-bottom:12px">
+        <div class="card">
+          <div class="card-hd">Municipality Breakdown — Apr 2026 Baseline</div>
+          <div class="chart-box" style="height:200px"><canvas id="c-ov-muni"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Engagement Funnel — 2026 Year-to-Date</div>
+          <div class="funnel-row"><div class="funnel-hdr"><span class="funnel-lbl">Calls Completed</span><span class="funnel-val" style="color:var(--blue)">854</span></div><div class="funnel-track"><div class="funnel-fill" style="width:100%;background:var(--blue)"></div></div></div>
+          <div class="funnel-row"><div class="funnel-hdr"><span class="funnel-lbl">Answered</span><span class="funnel-val" style="color:var(--teal)">121 (14.2%)</span></div><div class="funnel-track"><div class="funnel-fill" style="width:14.2%;background:var(--teal)"></div></div></div>
+          <div class="funnel-row"><div class="funnel-hdr"><span class="funnel-lbl">Engaged</span><span class="funnel-val" style="color:var(--gold)">74 (61.2%)</span></div><div class="funnel-track"><div class="funnel-fill" style="width:8.7%;background:var(--gold)"></div></div></div>
+          <div class="funnel-row"><div class="funnel-hdr"><span class="funnel-lbl">Satisfied</span><span class="funnel-val" style="color:var(--emerald)">71 (95.9%)</span></div><div class="funnel-track"><div class="funnel-fill" style="width:8.3%;background:var(--emerald)"></div></div></div>
+          <div class="funnel-row"><div class="funnel-hdr"><span class="funnel-lbl">Cases / Concerns Logged</span><span class="funnel-val" style="color:var(--coral)">22 (2.6%)</span></div><div class="funnel-track"><div class="funnel-fill" style="width:2.6%;background:var(--coral)"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MAY 2026 LIVE ══ -->
+    <div class="pnl" id="p-may">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600">May 2026 — Active Session</div>
+        <div class="live-badge"><span class="live-dot"></span>In Progress</div>
+      </div>
+
+      <div class="snap-strip" style="grid-template-columns:repeat(4,1fr)">
+        <div class="snap"><div class="snap-accent" style="background:#34D399"></div><div class="snap-lbl">Calls So Far</div><div class="snap-val">176</div><div class="snap-delta neu">W5D46 + W5D49</div></div>
+        <div class="snap"><div class="snap-accent" style="background:#34D399"></div><div class="snap-lbl">Answered</div><div class="snap-val">25</div><div class="snap-delta neu">14.2% rate</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Cases This Month</div><div class="snap-val">5</div><div class="snap-delta up">↑ Above avg pace</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--purple)"></div><div class="snap-lbl">Districts Active</div><div class="snap-val">W5 FT</div><div class="snap-delta neu">D46 + D49</div></div>
+      </div>
+
+      <div class="sh"><h2>Open Cases — May 2026</h2><div class="sh-line"></div><span class="sh-sub">5 cases requiring follow-up</span></div>
+      <div class="g2" style="margin-bottom:16px">
+        <div class="case-card">
+          <div class="cc-head">
+            <div><div class="cc-name">Tracy G Murray — VBM / Disability Voting Access</div><div class="cc-loc">W5D49 · Franklin Township · Haana R</div></div>
+            <div class="tag t-hi">Action Required</div>
+          </div>
+          <div class="cc-body">Constituent is disabled and relies on Vote-by-Mail. Raised concern that voting resources and processes are inaccessible to the disabled community. Requested advocacy for equitable VBM access. <strong>Follow-up: refer to county election office + flag for AJD accessibility review.</strong></div>
+        </div>
+        <div class="case-card" style="border-left-color:var(--purple)">
+          <div class="cc-head">
+            <div><div class="cc-name">Sean H Hubbs — Library Racial Bias + Defamation</div><div class="cc-loc">W5D49 · Franklin Township · Haana R</div></div>
+            <div class="tag t-hi">Multiple Issues</div>
+          </div>
+          <div class="cc-body">1. Township library employee exhibiting racially discriminatory behavior toward non-white patrons — multiple incidents, no reprimand. May contribute to low community engagement numbers.<br/>2. Constituent was removed as Eagle Scout leader from St. Mathias unfairly — Rep. Kramer working on it, no movement. <strong>Anonymous complaint filed at Izzy's desk.</strong></div>
+        </div>
+        <div class="case-card c-warn">
+          <div class="cc-head">
+            <div><div class="cc-name">Joao F Dasilva Sr — Senior Bathroom Repair Aid</div><div class="cc-loc">W5D46 · Franklin Township · Chris G</div></div>
+            <div class="tag t-ri">Referral Needed</div>
+          </div>
+          <div class="cc-body">Senior constituent inquiring about financial assistance for bathroom repair. Believes there may be municipal-level programs. <strong>Refer to Franklin Township Senior Services and NJ Home Modification Loan Program.</strong></div>
+        </div>
+        <div class="case-card c-info">
+          <div class="cc-head">
+            <div><div class="cc-name">Victoria R Ply — Federal Safety &amp; LGBTQ Concerns</div><div class="cc-loc">W5D46 · Franklin Township · Chris G</div></div>
+            <div class="tag t-new">New Category</div>
+          </div>
+          <div class="cc-body">Constituent expressed deep concern about LGBTQ rights under current federal climate, ICE activity in the community, and a general "fear of living in America." Very engaged and passionate. <strong>Document as emerging federal concern category — first of its kind in 2026 outreach.</strong></div>
+        </div>
+        <div class="case-card c-warn">
+          <div class="cc-head">
+            <div><div class="cc-name">Eric Adkins — Taxes, Water/Sewage, Solar Costs</div><div class="cc-loc">W5D46 · Franklin Township · Chris G</div></div>
+            <div class="tag t-ri">Multi-Issue</div>
+          </div>
+          <div class="cc-body">Senior on fixed income. Issues: (1) high property taxes, (2) sewage/water treatment plant smell, (3) solar panel installation costs. <strong>Refer to NJ Senior Freeze Program for taxes; note sewage smell for municipal infrastructure log.</strong></div>
+        </div>
+      </div>
+
+      <div class="sh"><h2>Session Log — May 2026 to Date</h2><div class="sh-line"></div></div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="overflow-x:auto">
+          <div class="session-row sr-hdr">
+            <div>Date</div><div>District</div><div>Agent</div>
+            <div class="sr-num">Calls</div><div class="sr-num">Ans.</div>
+            <div class="sr-num">Cases</div><div class="sr-num sr-col-h">VM</div>
+          </div>
+          <div class="session-row"><div class="sr-date">2026-05-14</div><div><span class="tt-ft">FT W5D46</span></div><div>Chris G</div><div class="sr-num">96</div><div class="sr-num">14</div><div class="sr-num"><strong>3</strong></div><div class="sr-num sr-col-h">~60</div></div>
+          <div class="session-row"><div class="sr-date">2026-05-14+</div><div><span class="tt-ft">FT W5D49</span></div><div>Haana R</div><div class="sr-num">80</div><div class="sr-num">11</div><div class="sr-num"><strong>2</strong></div><div class="sr-num sr-col-h">~38</div></div>
+          <div class="session-row" style="background:var(--bg);font-weight:600"><div></div><div>Totals</div><div></div><div class="sr-num">176</div><div class="sr-num">25</div><div class="sr-num">5</div><div class="sr-num sr-col-h">~98</div></div>
+        </div>
+      </div>
+
+      <div class="sh"><h2>Notable Constituent Feedback</h2><div class="sh-line"></div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd">Positive Engagements</div>
+          <div class="clist-item"><div class="ci-num">·</div><div><div class="ci-name">Valerie J Salice (D49)</div><div class="ci-meta">Praised senior scams seminar — wants more events. Appreciates a representative "actually doing something."</div></div></div>
+          <div class="clist-item"><div class="ci-num">·</div><div><div class="ci-name">Joseph R Delorenzo (D46)</div><div class="ci-meta">Supports the Assemblyman and will continue to do so. Rushed but warm.</div></div></div>
+          <div class="clist-item"><div class="ci-num">·</div><div><div class="ci-name">Cynthia Carlton (D49)</div><div class="ci-meta">No issues — positive engagement, content with community.</div></div></div>
+          <div class="clist-item"><div class="ci-num">·</div><div><div class="ci-name">Laurance Mokuwa (D46)</div><div class="ci-meta">Nothing comes to mind — friendly conversation.</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Call Quality Flags — May W5</div>
+          <div class="clist-item"><div class="ci-num">·</div><div><div class="ci-name">High VM / No-Answer Rate</div><div class="ci-meta">D49 shows significant "vm box full" and "disconnected" — list may need refresh for this ward.</div></div><div class="tag t-ri">List QA</div></div>
+          <div class="clist-item"><div class="ci-num">·</div><div><div class="ci-name">Out-of-District Numbers</div><div class="ci-meta">Doriane L Swain (Asbury Park), Brittany M Newby (Union NJ) — list cleanup needed.</div></div><div class="tag t-st">Clean</div></div>
+          <div class="clist-item"><div class="ci-num">·</div><div><div class="ci-name">Business / Reservation Lines</div><div class="ci-meta">Keith B Sadler (reservation line), Felicia M Jackson (business) — flag for removal.</div></div><div class="tag t-st">Clean</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FRANKLIN ══ -->
+    <div class="pnl" id="p-ft">
+      <div class="hero" style="margin-bottom:16px">
+        <div class="hero-bg" style=""></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,#003D38 0%,#00574F 45%,#00796B 100%)"></div>
+        <div class="hero-inner">
+          <div class="hero-body">
+            <div class="hero-left">
+              <div class="hero-eyebrow">Franklin Township · ~22,000 Records · Primary Call Base</div>
+              <div class="hero-title">Franklin<br/><strong>Township</strong></div>
+              <div class="hero-stats" style="margin-top:20px">
+                <div class="hstat"><div class="hstat-num">525</div><div class="hstat-lbl">2026 Calls</div></div>
+                <div class="hstat"><div class="hstat-num">32</div><div class="hstat-lbl">Answered</div></div>
+                <div class="hstat"><div class="hstat-num">8</div><div class="hstat-lbl">Cases</div></div>
+              </div>
+              <div class="hero-status">
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>W5 Active — D46 &amp; D49 in progress</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-amber"></span>D49 list quality: review recommended</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>Top concern: Infrastructure + Healthcare</div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div class="hero-next">
+                <div class="hero-next-title">Active Wards — 2026</div>
+                <div class="hero-next-item"><span class="hn-icon">📋</span>W1D6 &amp; W1D8 — Apr baseline complete</div>
+                <div class="hero-next-item"><span class="hn-icon">📞</span>W5D46 — 96 calls, 14 ans., 3 cases (May)</div>
+                <div class="hero-next-item"><span class="hn-icon">📞</span>W5D49 — 80 calls, 11 ans., 2 cases (May)</div>
+                <div class="hero-next-item"><span class="hn-icon">⚠️</span>W5D44, W5D45 — pending sessions</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="snap-strip" style="grid-template-columns:repeat(4,1fr)">
+        <div class="snap"><div class="snap-accent" style="background:var(--teal)"></div><div class="snap-lbl">Apr 2026 Calls</div><div class="snap-val">149</div><div class="snap-delta neu">W1 baseline</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--teal)"></div><div class="snap-lbl">May W5 Calls</div><div class="snap-val">176</div><div class="snap-delta up">↑ In progress</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Cases (2026 YTD)</div><div class="snap-val">8</div><div class="snap-delta up">↑ Pacing up vs Apr</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--teal)"></div><div class="snap-lbl">Program Total</div><div class="snap-val">~52+</div><div class="snap-delta neu">Since Nov '24</div></div>
+      </div>
+
+      <div class="gcol" style="margin-bottom:12px">
+        <div>
+          <div class="g2" style="margin-bottom:12px">
+            <div class="card">
+              <div class="card-hd">Franklin — Monthly Volume (All Seasons)</div>
+              <div class="chart-box" style="height:200px"><canvas id="c-ft-hist"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-hd">Franklin — Answer Rate by Month</div>
+              <div class="chart-box" style="height:200px"><canvas id="c-ft-ar"></canvas></div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-hd">Ward Breakdown — 2026 YTD</div>
+            <div style="overflow-x:auto">
+              <table class="dt">
+                <thead><tr><th>Ward / District</th><th>Period</th><th class="num">Calls</th><th class="num">Answered</th><th class="num">Engaged</th><th class="num">Cases</th><th>Key Issues</th></tr></thead>
+                <tbody>
+                  <tr><td>W1 D6</td><td>Apr '26</td><td class="num">72</td><td class="num">12</td><td class="num">5</td><td class="num"><strong>2</strong></td><td style="font-size:11px">Senior care, rising healthcare costs</td></tr>
+                  <tr><td>W1 D8</td><td>Apr '26</td><td class="num">77</td><td class="num">9</td><td class="num">6</td><td class="num"><strong>4</strong></td><td style="font-size:11px">S. Middlebush dev, Medicare gap, snow removal</td></tr>
+                  <tr><td>W5 D46</td><td>May '26</td><td class="num">96</td><td class="num">14</td><td class="num">10</td><td class="num"><strong>3</strong></td><td style="font-size:11px">Taxes/solar, senior repair, federal safety</td></tr>
+                  <tr><td>W5 D49</td><td>May '26</td><td class="num">80</td><td class="num">11</td><td class="num">8</td><td class="num"><strong>2</strong></td><td style="font-size:11px">VBM/disability, library racial bias</td></tr>
+                  <tr style="background:var(--bg);font-weight:600"><td colspan="2">2026 Total</td><td class="num">325+</td><td class="num">46</td><td class="num">29</td><td class="num">11</td><td></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-hd">Franklin — All Concerns Ranked</div>
+            <div class="clist-item"><div class="ci-num">1</div><div><div class="ci-name">Truck Traffic &amp; Warehouse Expansion</div><div class="ci-meta">Nov '24 – present · 5+ cases in Nov alone</div></div><div class="tag t-hi">Persistent</div></div>
+            <div class="clist-item"><div class="ci-num">2</div><div><div class="ci-name">ANCHOR &amp; Benefits Program Access</div><div class="ci-meta">Nov '24 – May '25 · recurring questions</div></div><div class="tag t-st">Steady</div></div>
+            <div class="clist-item"><div class="ci-num">3</div><div><div class="ci-name">Pavement &amp; Road Conditions</div><div class="ci-meta">Dec '24 – present</div></div><div class="tag t-st">Steady</div></div>
+            <div class="clist-item"><div class="ci-num">4</div><div><div class="ci-name">Healthcare / Senior Care Access</div><div class="ci-meta">Apr–May '26 strengthening</div></div><div class="tag t-em">Emerging</div></div>
+            <div class="clist-item"><div class="ci-num">5</div><div><div class="ci-name">VBM / Disability Voting Access</div><div class="ci-meta">May '26 — new case category</div></div><div class="tag t-new">New '26</div></div>
+            <div class="clist-item"><div class="ci-num">6</div><div><div class="ci-name">Library Racial Bias (Township Entity)</div><div class="ci-meta">May '26 — multiple incidents, no reprimand</div></div><div class="tag t-new">New '26</div></div>
+            <div class="clist-item"><div class="ci-num">7</div><div><div class="ci-name">Municipal Unresponsiveness</div><div class="ci-meta">Ongoing — residents feel unheard by twp</div></div><div class="tag t-ri">Rising</div></div>
+            <div class="clist-item"><div class="ci-num">8</div><div><div class="ci-name">Taxes / Affordability (Fixed Income)</div><div class="ci-meta">May '26 · seniors specifically</div></div><div class="tag t-ri">Rising</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NORTH BRUNSWICK ══ -->
+    <div class="pnl" id="p-nb">
+      <div class="hero" style="margin-bottom:16px">
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,#5C3A00 0%,#8A5500 45%,#B8810A 100%)"></div>
+        <div class="hero-inner">
+          <div class="hero-body">
+            <div class="hero-left">
+              <div class="hero-eyebrow">North Brunswick · D2 &amp; D4 · Added Jan 2025</div>
+              <div class="hero-title">North<br/><strong>Brunswick</strong></div>
+              <div class="hero-stats" style="margin-top:20px">
+                <div class="hstat"><div class="hstat-num">148</div><div class="hstat-lbl">Apr '26 Calls</div></div>
+                <div class="hstat"><div class="hstat-num">23</div><div class="hstat-lbl">Answered</div></div>
+                <div class="hstat"><div class="hstat-num">6</div><div class="hstat-lbl">Cases</div></div>
+              </div>
+              <div class="hero-status">
+                <div class="hstatus-item"><span class="hstatus-dot dot-amber"></span>Awaiting May rotation</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-red"></span>D4 highest case volume in district</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>100% satisfaction April '26</div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div class="hero-next">
+                <div class="hero-next-title">Priority Issues</div>
+                <div class="hero-next-item"><span class="hn-icon">🏗️</span>Overdevelopment — car-first design harms seniors &amp; youth</div>
+                <div class="hero-next-item"><span class="hn-icon">🌳</span>Target complex: missed community green space</div>
+                <div class="hero-next-item"><span class="hn-icon">⚡</span>Energy and housing cost anxiety rising</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="snap-strip" style="grid-template-columns:repeat(4,1fr)">
+        <div class="snap"><div class="snap-accent" style="background:var(--gold)"></div><div class="snap-lbl">Calls Apr '26</div><div class="snap-val">148</div><div class="snap-delta neu">D2 + D4</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--gold)"></div><div class="snap-lbl">Answer Rate</div><div class="snap-val">15.5%</div><div class="snap-delta up">↑ Above avg</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Cases</div><div class="snap-val">6</div><div class="snap-delta neu">D4: 5 of 6</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--gold)"></div><div class="snap-lbl">First Active</div><div class="snap-val">Jan '25</div><div class="snap-delta neu">~4 days/mo initial</div></div>
+      </div>
+      <div class="g2" style="margin-bottom:12px">
+        <div class="card">
+          <div class="card-hd">NB District Breakdown · Apr 2026</div>
+          <table class="dt">
+            <thead><tr><th>District</th><th class="num">Calls</th><th class="num">Answered</th><th class="num">Engaged</th><th class="num">Cases</th></tr></thead>
+            <tbody>
+              <tr><td>D2</td><td class="num">58</td><td class="num">6</td><td class="num">4</td><td class="num"><strong>1</strong></td></tr>
+              <tr><td>D4</td><td class="num">90</td><td class="num">17</td><td class="num">10</td><td class="num"><strong>5</strong></td></tr>
+              <tr style="background:var(--bg);font-weight:600"><td>Total</td><td class="num">148</td><td class="num">23</td><td class="num">14</td><td class="num">6</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-hd">NB Concern Categories</div>
+          <div class="clist-item"><div class="ci-num">1</div><div><div class="ci-name">Car-First Urban Design — Walkability Deficit</div><div class="ci-meta">Seniors &amp; youth cannot reach groceries, medical, library</div></div><div class="tag t-hi">Critical</div></div>
+          <div class="clist-item"><div class="ci-num">2</div><div><div class="ci-name">Overdevelopment / Missed Green Space</div><div class="ci-meta">Target complex cited as missed community opportunity</div></div><div class="tag t-ri">Rising</div></div>
+          <div class="clist-item"><div class="ci-num">3</div><div><div class="ci-name">Energy &amp; Housing Cost Anxiety</div><div class="ci-meta">High across D2 and D4</div></div><div class="tag t-ri">Rising</div></div>
+          <div class="clist-item"><div class="ci-num">4</div><div><div class="ci-name">Municipal Building Construction (Unfinished)</div><div class="ci-meta">Ongoing since Jan 2025 outreach</div></div><div class="tag t-st">Steady</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SOUTH BOUND BROOK ══ -->
+    <div class="pnl" id="p-sbb">
+      <div class="hero" style="margin-bottom:16px">
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,#2D0F50 0%,#4C1D95 45%,#5B21B6 100%)"></div>
+        <div class="hero-inner">
+          <div class="hero-body">
+            <div class="hero-left">
+              <div class="hero-eyebrow">South Bound Brook · D1 &amp; D3 · Added Feb 2025</div>
+              <div class="hero-title">South Bound<br/><strong>Brook</strong></div>
+              <div class="hero-stats" style="margin-top:20px">
+                <div class="hstat"><div class="hstat-num">130</div><div class="hstat-lbl">Apr '26 Calls</div></div>
+                <div class="hstat"><div class="hstat-num">26</div><div class="hstat-lbl">Answered</div></div>
+                <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Cases</div></div>
+              </div>
+              <div class="hero-status">
+                <div class="hstatus-item"><span class="hstatus-dot dot-amber"></span>Awaiting May rotation</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-red"></span>Trust deficit with municipal council: critical</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>Highest answer rate in Apr '26 (20%)</div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div class="hero-next">
+                <div class="hero-next-title">Priority Issues</div>
+                <div class="hero-next-item"><span class="hn-icon">🏛️</span>Municipal council "snubs" residents — high frustration</div>
+                <div class="hero-next-item"><span class="hn-icon">🏭</span>Franklin warehouse spillover: noise, lights, traffic</div>
+                <div class="hero-next-item"><span class="hn-icon">🚨</span>Dispatcher benefits bill — constituent action request</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="snap-strip" style="grid-template-columns:repeat(4,1fr)">
+        <div class="snap"><div class="snap-accent" style="background:var(--purple)"></div><div class="snap-lbl">Calls Apr '26</div><div class="snap-val">130</div><div class="snap-delta neu">D1 + D3</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--purple)"></div><div class="snap-lbl">Answer Rate</div><div class="snap-val">20.0%</div><div class="snap-delta up">↑ Highest in district</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Cases</div><div class="snap-val">5</div><div class="snap-delta neu">D1: 3, D3: 2</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--purple)"></div><div class="snap-lbl">Satisfaction</div><div class="snap-val">100%</div><div class="snap-delta up">↑ Since day one</div></div>
+      </div>
+      <div class="g2" style="margin-bottom:12px">
+        <div class="card">
+          <div class="card-hd">SBB District Breakdown · Apr 2026</div>
+          <table class="dt">
+            <thead><tr><th>District</th><th class="num">Calls</th><th class="num">Answered</th><th class="num">Engaged</th><th class="num">Cases</th></tr></thead>
+            <tbody>
+              <tr><td>D1</td><td class="num">61</td><td class="num">9</td><td class="num">9</td><td class="num"><strong>3</strong></td></tr>
+              <tr><td>D3</td><td class="num">69</td><td class="num">17</td><td class="num">3</td><td class="num"><strong>2</strong></td></tr>
+              <tr style="background:var(--bg);font-weight:600"><td>Total</td><td class="num">130</td><td class="num">26</td><td class="num">12</td><td class="num">5</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-hd">SBB Key Concerns</div>
+          <div class="clist-item"><div class="ci-num">1</div><div><div class="ci-name">Municipal Council Trust Deficit</div><div class="ci-meta">Residents feel "snubbed" and "ignored" — D1 dominant</div></div><div class="tag t-hi">Critical</div></div>
+          <div class="clist-item"><div class="ci-num">2</div><div><div class="ci-name">Franklin Warehouse Spillover Effects</div><div class="ci-meta">Floodlights, noise, congestion crossing borders</div></div><div class="tag t-ri">Rising</div></div>
+          <div class="clist-item"><div class="ci-num">3</div><div><div class="ci-name">Emergency Dispatcher Benefits Bill</div><div class="ci-meta">D1 constituent requested Assemblyman review PD/FD bill</div></div><div class="tag t-em">Action</div></div>
+          <div class="clist-item"><div class="ci-num">4</div><div><div class="ci-name">Overdevelopment Noise — D3</div><div class="ci-meta">Weed, warehouse noise from neighboring developments</div></div><div class="tag t-st">Steady</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ HISTORY ══ -->
+    <div class="pnl" id="p-hist">
+      <div class="hero" style="margin-bottom:16px">
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,#4A0E0E 0%,#7B1D1D 45%,#B83232 100%)"></div>
+        <div class="hero-inner">
+          <div class="hero-body">
+            <div class="hero-left">
+              <div class="hero-eyebrow">Historical Record · Nov 2024 – May 2025 · Season One</div>
+              <div class="hero-title">Program<br/><strong>History</strong></div>
+              <div class="hero-stats" style="margin-top:20px">
+                <div class="hstat"><div class="hstat-num">4,969</div><div class="hstat-lbl">Season 1 Calls</div></div>
+                <div class="hstat"><div class="hstat-num">65</div><div class="hstat-lbl">Cases</div></div>
+                <div class="hstat"><div class="hstat-num">94<sup>%</sup></div><div class="hstat-lbl">Avg Satisfaction</div></div>
+              </div>
+              <div class="hero-status">
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>90 active days</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>471 constituents engaged</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>3 municipalities by Feb '25</div>
+                <div class="hstatus-item"><span class="hstatus-dot dot-green"></span>~20 day case resolution avg</div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div class="hero-next">
+                <div class="hero-next-title">Season 1 Benchmarks</div>
+                <div class="hero-next-item"><span class="hn-icon">📞</span>54 calls/day program average</div>
+                <div class="hero-next-item"><span class="hn-icon">📊</span>14.8% answer rate average</div>
+                <div class="hero-next-item"><span class="hn-icon">✅</span>Satisfaction grew from 88.7% → 100%</div>
+                <div class="hero-next-item"><span class="hn-icon">🗺️</span>Expanded FT → NB (Jan) → SBB (Feb)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="snap-strip">
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Total Calls</div><div class="snap-val">4,969</div><div class="snap-delta neu">Nov '24 – May '25</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Answered</div><div class="snap-val">737</div><div class="snap-delta neu">14.8% avg rate</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Engaged</div><div class="snap-val">471</div><div class="snap-delta neu">63.9% of answered</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Cases</div><div class="snap-val">65</div><div class="snap-delta neu">Avg 1/day</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Satisfaction</div><div class="snap-val">94%</div><div class="snap-delta up">↑ Grew monthly</div></div>
+      </div>
+      <div class="g2" style="margin-bottom:12px">
+        <div class="card">
+          <div class="card-hd">Monthly Call Volume 2024–2025</div>
+          <div class="chart-box" style="height:220px"><canvas id="c-h-calls"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Cases by Month</div>
+          <div class="chart-box" style="height:220px"><canvas id="c-h-cases"></canvas></div>
+        </div>
+      </div>
+      <div class="g2" style="margin-bottom:12px">
+        <div class="card">
+          <div class="card-hd">Answer Rate % by Month</div>
+          <div class="chart-box" style="height:180px"><canvas id="c-h-ar"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Satisfaction Rate % by Month</div>
+          <div class="chart-box" style="height:180px"><canvas id="c-h-sat"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Program Timeline — Season One</div>
+        <div class="tl">
+          <div class="tl-item"><div class="tl-dot" style="background:#003087;color:#fff">🚀</div><div class="tl-body"><div class="tl-date">November 2024</div><div class="tl-title">Launch — Franklin Township</div><div class="tl-desc">595 calls · 9 days · 15 cases · 88.7% satisfaction. Top concern: truck/warehouse traffic.</div></div></div>
+          <div class="tl-item"><div class="tl-dot" style="background:var(--gold)">🗣️</div><div class="tl-body"><div class="tl-date">December 2024</div><div class="tl-title">Bilingual Agent Added · VM Tracking Begins</div><div class="tl-desc">928 calls · 11 days · 19 cases · 90% satisfaction. Jean onboarded (Spanish). Avg close time ~6 days.</div></div></div>
+          <div class="tl-item"><div class="tl-dot" style="background:var(--teal)">📍</div><div class="tl-body"><div class="tl-date">January 2025</div><div class="tl-title">North Brunswick Added</div><div class="tl-desc">722 calls · 15 days · 4 cases · 98% satisfaction. NB list incomplete — answer rate dipped to 9%.</div></div></div>
+          <div class="tl-item"><div class="tl-dot" style="background:var(--purple)">📍</div><div class="tl-body"><div class="tl-date">February 2025</div><div class="tl-title">South Bound Brook Added — Full LD17 Coverage</div><div class="tl-desc">771 calls · 15 days · 4 cases · 100% satisfaction. Most notable: bicycle fatality case, ILHEAP, fallen trees.</div></div></div>
+          <div class="tl-item"><div class="tl-dot" style="background:var(--emerald)">📊</div><div class="tl-body"><div class="tl-date">March 2025</div><div class="tl-title">Q1 Close — 3,817 Cumulative Calls</div><div class="tl-desc">801 calls · 6 cases · 97% satisfaction. Ward 4 speeding. Q1: 2,294 calls, 94% satisfied.</div></div></div>
+          <div class="tl-item"><div class="tl-dot" style="background:var(--coral)">🗳️</div><div class="tl-body"><div class="tl-date">April 2025</div><div class="tl-title">VBM Script Phase</div><div class="tl-desc">742 calls · 9 cases · 100% satisfaction. First half VBM, second half general check-in.</div></div></div>
+          <div class="tl-item"><div class="tl-dot" style="background:#003087;color:#fff">✅</div><div class="tl-body"><div class="tl-date">May 2025</div><div class="tl-title">Season 1 Close — 4,969 Total Calls</div><div class="tl-desc">400 calls · 1 case · 100% satisfaction. 65 cumulative cases. 471 engaged across the season.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AUDIT ══ -->
+    <div class="pnl" id="p-audit">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:4px">Oversight &amp; Audit</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:18px">Unfiltered session records · Data integrity flags · Methodology reference</div>
+      <div class="snap-strip" style="grid-template-columns:repeat(4,1fr)">
+        <div class="snap"><div class="snap-accent" style="background:var(--slate)"></div><div class="snap-lbl">Sessions Logged</div><div class="snap-val">93+</div><div class="snap-delta neu">Nov '24 – May '26</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--blue)"></div><div class="snap-lbl">Data Coverage</div><div class="snap-val">100%</div><div class="snap-delta up">All sessions tracked</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--coral)"></div><div class="snap-lbl">Integrity Flags</div><div class="snap-val">4</div><div class="snap-delta neu">See log below</div></div>
+        <div class="snap"><div class="snap-accent" style="background:var(--emerald)"></div><div class="snap-lbl">Cross-Verified</div><div class="snap-val">✓</div><div class="snap-delta up">Reports match rows</div></div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-hd">Data Integrity Flags</div>
+        <div class="anom an-hi"><div class="an-icon">⚠</div><div><div class="an-title">Date Format Inconsistency — HIGH</div><div class="an-body">Excel serial integers, sequential row numbers, and text labels all in DATE column. Feb '25 NB rows use integers 34–37 with no date. Normalized to YYYY-MM-DD via base 1899-12-30. Verify Feb NB assigned to 2025-02.</div></div></div>
+        <div class="anom an-hi"><div class="an-icon">⚠</div><div><div class="an-title">Satisfaction Definition Drift — HIGH</div><div class="an-body">Nov '24 report notes need to define "actively satisfied vs. passively satisfied." x_satisfied column added Dec '24 but sparsely populated. Treat satisfaction figures as directional, not precise for policy documents.</div></div></div>
+        <div class="anom an-md"><div class="an-icon">◆</div><div><div class="an-title">Duplicate Sheet — May 2025 — MEDIUM</div><div class="an-body">Two "Current tracking" sheets in HRRRJS_working_metrics.xlsx with diverging totals (400 vs 231 calls). 400-call figure aligns with narrative report. 231-call sheet excluded as draft artifact.</div></div></div>
+        <div class="anom an-ok"><div class="an-icon">✓</div><div><div class="an-title">Cumulative Totals Cross-Verified — PASS</div><div class="an-body">Monthly totals from narrative reports match row-level spreadsheet data. Nov→May chain validates. Cumulative 82 cases (65 through May '25 + 17 Apr '26 + 5 May '26 in progress) confirmed.</div></div></div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-hd">Monthly Aggregate Audit Log</div>
+        <div style="overflow-x:auto"><div id="audit-body"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Methodology &amp; Field Definitions</div>
+        <div class="g2">
+          <div style="font-size:11.5px;color:var(--muted);line-height:2.1">
+            <strong style="color:var(--txt)">Calls Made:</strong> Total dials per session<br/>
+            <strong style="color:var(--txt)">Answered:</strong> Any pickup including hangups<br/>
+            <strong style="color:var(--txt)">Engaged:</strong> Substantive conversation ≥30s<br/>
+            <strong style="color:var(--txt)">Satisfied:</strong> No grievance or issue-but-content<br/>
+            <strong style="color:var(--txt)">Cases:</strong> Issues logged in Fireside CRM<br/>
+            <strong style="color:var(--txt)">Answer Rate:</strong> Answered ÷ Calls Made<br/>
+            <strong style="color:var(--txt)">Satisfaction Rate:</strong> Satisfied ÷ Engaged (excludes hangups)
+          </div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:2.1">
+            <strong style="color:var(--txt)">Hours:</strong> 6:30 PM – 8:30 PM, Mon–Thu<br/>
+            <strong style="color:var(--txt)">Staff:</strong> 1–3 agents per evening<br/>
+            <strong style="color:var(--txt)">Bilingual:</strong> Spanish agent from Dec 2024<br/>
+            <strong style="color:var(--txt)">CRM:</strong> Fireside — tagged "outreach"<br/>
+            <strong style="color:var(--txt)">List Size:</strong> ~22,000 Franklin; NB/SBB supplemental<br/>
+            <strong style="color:var(--txt)">Resolution:</strong> ~20 day avg with municipality
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FORECAST LAB ══ -->
+    <div class="pnl" id="p-lab">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:4px">Forecast Lab</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:18px">Interactive predictive modeling · Adjust multipliers to stress-test 2026 trajectory</div>
+      <div class="g2" style="margin-bottom:12px;align-items:start">
+        <div class="card">
+          <div class="card-hd">6-Month Projection — Jun–Nov 2026</div>
+          <div class="chart-box" style="height:240px"><canvas id="c-fc"></canvas></div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><div style="width:18px;height:2px;background:var(--blue)"></div>Actuals</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><div style="width:18px;height:2px;border-top:2px dashed var(--blue);opacity:.5"></div>Forecast</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><div style="width:18px;height:7px;background:rgba(0,48,135,.1)"></div>Confidence</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Stress-Test Controls</div>
+          <div class="sl-wrap"><div class="sl-hdr"><span class="sl-name">Outreach Intensity</span><span class="sl-val" id="v-i">1.00×</span></div><div class="sl-hint">Scale staff nights (0.5 = halved, 2.0 = doubled)</div><input type="range" min="50" max="200" value="100" step="5" oninput="updateF(this,'i')"/></div>
+          <div class="sl-wrap"><div class="sl-hdr"><span class="sl-name">List Quality Decay</span><span class="sl-val" id="v-d">1.00×</span></div><div class="sl-hint">Lower if list not refreshed in 6+ months</div><input type="range" min="70" max="100" value="100" step="1" oninput="updateF(this,'d')"/></div>
+          <div class="sl-wrap"><div class="sl-hdr"><span class="sl-name">Seasonal Friction</span><span class="sl-val" id="v-s">1.00×</span></div><div class="sl-hint">Holiday / election / weather dampening</div><input type="range" min="70" max="110" value="100" step="1" oninput="updateF(this,'s')"/></div>
+          <div class="sl-wrap"><div class="sl-hdr"><span class="sl-name">Scope Expansion</span><span class="sl-val" id="v-e">1.00×</span></div><div class="sl-hint">Simulate adding a new municipality</div><input type="range" min="100" max="300" value="100" step="10" oninput="updateF(this,'e')"/></div>
+          <div class="proj-box">
+            <div><div class="proj-num" id="proj-c">2,700</div><div class="proj-lbl">Projected Calls</div></div>
+            <div><div class="proj-num" id="proj-k" style="color:var(--teal)">40</div><div class="proj-lbl">Projected Cases</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── AUTH ──
+document.getElementById('pwd').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+function doLogin(){
+  if(document.getElementById('pwd').value==='district17'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').classList.add('active');
+    setTimeout(boot,120);
+  } else {
+    const e=document.getElementById('l-err');
+    e.style.display='block';
+    document.getElementById('pwd').value='';
+    setTimeout(()=>e.style.display='none',3000);
+  }
+}
+function doLogout(){
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('pwd').value='';
+}
+
+// ── TABS ──
+function showTab(id,cls,btn){
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>{b.className=b.className.replace(/\bon\b/,'').trim()});
+  document.getElementById('p-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(cls) btn.classList.add(cls);
+}
+
+// ── DATA ──
+const MONTHS=['Nov\'24','Dec\'24','Jan\'25','Feb\'25','Mar\'25','Apr\'25','May\'25','Apr\'26','May\'26*'];
+const CALLS=[595,928,722,771,801,742,400,427,176];
+const ANS=[99,139,89,115,110,98,69,70,25];
+const ENG=[71,94,57,70,62,60,36,37,18];
+const CASES=[15,19,4,4,6,9,1,17,5];
+const SAT=[88.7,90,98,100,97,100,100,100,96];
+const AR=[16.6,15.0,12.3,14.9,13.7,13.2,17.3,16.4,14.2];
+
+const AUDIT=[
+  {p:'2024-11',m:'Franklin Township',c:595,a:99,e:71,k:15},
+  {p:'2024-12',m:'Franklin Township',c:928,a:139,e:94,k:19},
+  {p:'2025-01',m:'Franklin + North Brunswick',c:722,a:89,e:57,k:4},
+  {p:'2025-02',m:'Franklin + NB + SBB',c:771,a:115,e:70,k:4},
+  {p:'2025-03',m:'Franklin + NB + SBB',c:801,a:110,e:62,k:6},
+  {p:'2025-04',m:'Franklin + NB + SBB (VBM)',c:742,a:98,e:60,k:9},
+  {p:'2025-05',m:'Full LD17',c:400,a:69,e:36,k:1},
+  {p:'2026-04',m:'NB + SBB + Franklin',c:427,a:70,e:37,k:17},
+  {p:'2026-05*',m:'Franklin W5 (in progress)',c:176,a:25,e:18,k:5},
+];
+
+// Chart defaults
+const BASE={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(17,24,39,.9)',titleColor:'#fff',bodyColor:'rgba(255,255,255,.72)',borderColor:'rgba(255,255,255,.07)',borderWidth:1,padding:9,cornerRadius:0}},
+  scales:{x:{grid:{color:'rgba(0,0,0,0.035)'},ticks:{color:'#94949E',font:{family:'DM Sans',size:10}}},y:{grid:{color:'rgba(0,0,0,0.035)'},ticks:{color:'#94949E',font:{family:'DM Sans',size:10}}}}
+};
+
+let fcChart=null,mults={i:1,d:1,s:1,e:1};
+
+function mk(id,cfg){const el=document.getElementById(id);if(!el)return null;return new Chart(el,cfg)}
+
+function boot(){
+  buildAudit();
+
+  // Overview calls
+  mk('c-ov-calls',{type:'bar',data:{labels:MONTHS,datasets:[{data:CALLS,
+    backgroundColor:['#003087','#003087','#00796B','#5B21B6','#00796B','#B83232','#00796B','#003087','rgba(52,211,153,.7)'],
+    borderRadius:0,borderSkipped:false}]},options:{...BASE}});
+
+  mk('c-ov-muni',{type:'doughnut',data:{
+    labels:['Franklin Township','North Brunswick','South Bound Brook'],
+    datasets:[{data:[3169,1428,799],backgroundColor:['#00796B','#B8810A','#5B21B6'],borderWidth:3,borderColor:'#fff',hoverOffset:5}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:14,font:{family:'DM Sans',size:11},color:'#52525B'}},tooltip:{...BASE.plugins.tooltip}},cutout:'62%'}});
+
+  // Franklin
+  mk('c-ft-hist',{type:'bar',data:{labels:['Nov\'24','Dec\'24','Jan\'25','Feb\'25','Mar\'25','Apr\'25','May\'25','Apr\'26','May\'26*'],
+    datasets:[{data:[595,928,561,409,801,742,400,149,176],backgroundColor:'rgba(0,121,107,.75)',borderRadius:0,borderSkipped:false}]},options:{...BASE}});
+  mk('c-ft-ar',{type:'line',data:{labels:['Nov\'24','Dec\'24','Jan\'25','Feb\'25','Mar\'25','Apr\'25','May\'25','Apr\'26','May\'26*'],
+    datasets:[{data:[16.6,15.0,11.8,14.2,13.7,13.2,17.3,14.1,14.2],borderColor:'#00796B',backgroundColor:'rgba(0,121,107,.07)',borderWidth:2.5,fill:true,tension:.4,pointBackgroundColor:'#00796B',pointRadius:4}]
+  },options:{...BASE,scales:{...BASE.scales,y:{...BASE.scales.y,min:0,max:22,ticks:{...BASE.scales.y.ticks,callback:v=>v+'%'}}}}});
+
+  // History
+  mk('c-h-calls',{type:'bar',data:{labels:MONTHS.slice(0,7),datasets:[{data:CALLS.slice(0,7),
+    backgroundColor:['#003087','#003087','#00796B','#5B21B6','#00796B','#B83232','#00796B'],
+    borderRadius:0,borderSkipped:false}]},options:{...BASE}});
+  mk('c-h-cases',{type:'bar',data:{labels:MONTHS.slice(0,7),datasets:[{data:CASES.slice(0,7),
+    backgroundColor:CASES.slice(0,7).map(v=>v>=10?'rgba(184,50,50,.8)':'rgba(0,121,107,.7)'),
+    borderRadius:0,borderSkipped:false}]},options:{...BASE}});
+  mk('c-h-ar',{type:'line',data:{labels:MONTHS.slice(0,7),datasets:[{data:AR.slice(0,7),borderColor:'#003087',backgroundColor:'rgba(0,48,135,.06)',borderWidth:2.5,fill:true,tension:.4,pointBackgroundColor:AR.slice(0,7).map(v=>v<11?'#B83232':'#003087'),pointRadius:5}]
+  },options:{...BASE,scales:{...BASE.scales,y:{...BASE.scales.y,min:0,max:22,ticks:{...BASE.scales.y.ticks,callback:v=>v+'%'}}}}});
+  mk('c-h-sat',{type:'line',data:{labels:MONTHS.slice(0,7),datasets:[{data:SAT.slice(0,7),borderColor:'#065F46',backgroundColor:'rgba(6,95,70,.06)',borderWidth:2.5,fill:true,tension:.4,pointBackgroundColor:'#065F46',pointRadius:5}]
+  },options:{...BASE,scales:{...BASE.scales,y:{...BASE.scales.y,min:82,max:105,ticks:{...BASE.scales.y.ticks,callback:v=>v+'%'}}}}});
+
+  // Forecast
+  const fcLabels=[...MONTHS,'Jun\'26','Jul\'26','Aug\'26','Sep\'26','Oct\'26','Nov\'26'];
+  const fbBase=[460,480,495,510,525,545];
+  fcChart=mk('c-fc',{type:'line',data:{labels:fcLabels,datasets:[
+    {label:'Actuals',data:[...CALLS,...Array(6).fill(null)],borderColor:'#003087',backgroundColor:'rgba(0,48,135,.06)',borderWidth:2.5,fill:false,tension:.3,pointBackgroundColor:'#003087',pointRadius:3},
+    {label:'Conf',data:[...Array(9).fill(null),176,...fbBase.map(v=>Math.round(v*1.15))],borderColor:'transparent',backgroundColor:'rgba(0,48,135,.08)',fill:'+1',tension:.3,pointRadius:0},
+    {label:'Forecast',data:[...Array(9).fill(null),176,...fbBase],borderColor:'rgba(0,48,135,.45)',backgroundColor:'transparent',borderWidth:2,borderDash:[5,4],fill:false,tension:.3,pointRadius:3},
+    {label:'Lower',data:[...Array(9).fill(null),176,...fbBase.map(v=>Math.round(v*.85))],borderColor:'transparent',backgroundColor:'rgba(0,48,135,.08)',fill:'-1',tension:.3,pointRadius:0},
+  ]},options:{...BASE,plugins:{...BASE.plugins,legend:{display:false}}}});
+  rebuildF();
+}
+
+function updateF(el,key){
+  mults[key]=parseInt(el.value)/100;
+  document.getElementById('v-'+key).textContent=mults[key].toFixed(2)+'×';
+  rebuildF();
+}
+function rebuildF(){
+  const m=mults;const mult=m.i*m.d*m.s*m.e;
+  const base=[460,480,495,510,525,545].map(v=>Math.round(v*mult));
+  const tot=base.reduce((a,b)=>a+b,0);
+  document.getElementById('proj-c').textContent=tot.toLocaleString();
+  document.getElementById('proj-k').textContent=Math.round(tot*.015);
+  if(fcChart){
+    fcChart.data.datasets[1].data=[...Array(9).fill(null),176,...base.map(v=>Math.round(v*1.15))];
+    fcChart.data.datasets[2].data=[...Array(9).fill(null),176,...base];
+    fcChart.data.datasets[3].data=[...Array(9).fill(null),176,...base.map(v=>Math.round(v*.85))];
+    fcChart.update('none');
+  }
+}
+
+function buildAudit(){
+  const el=document.getElementById('audit-body');if(!el)return;
+  const hdr=`<div class="aud-row aud-hdr"><div>Period</div><div>Municipality</div><div class="ar">Calls</div><div class="ar">Answered</div><div class="ar">Engaged</div><div class="ar">Cases</div></div>`;
+  const rows=AUDIT.map(r=>`<div class="aud-row"><div class="adt">${r.p}</div><div>${r.m}</div><div class="ar">${r.c.toLocaleString()}</div><div class="ar">${r.a}</div><div class="ar">${r.e}</div><div class="ar"><strong>${r.k}</strong></div></div>`).join('');
+  el.innerHTML=hdr+rows;
+}
+</script>
+</body>
+</html>
