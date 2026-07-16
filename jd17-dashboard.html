@@ -699,7 +699,7 @@ function mk(id,cfg){const el=document.getElementById(id);if(!el)return null;retu
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('pwd').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 });
-function doLogin(){if(document.getElementById('pwd').value==='district17'){document.getElementById('ls').style.display='none';document.getElementById('app').style.display='flex';setTimeout(boot,120);}else{const e=document.getElementById('lerr');e.style.display='block';document.getElementById('pwd').value='';setTimeout(()=>e.style.display='none',3000);}}
+function doLogin(){if(document.getElementById('pwd').value==='District17@2026'){document.getElementById('ls').style.display='none';document.getElementById('app').style.display='flex';setTimeout(boot,120);}else{const e=document.getElementById('lerr');e.style.display='block';document.getElementById('pwd').value='';setTimeout(()=>e.style.display='none',3000);}}
 function doLogout(){document.getElementById('app').style.display='none';document.getElementById('ls').style.display='flex';document.getElementById('pwd').value='';}
 function showTab(id,btn){document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.getElementById('p-'+id).classList.add('on');btn.classList.add('on');const cls=btn.className.match(/\bt[a-z]\b/);if(cls)btn.classList.add(cls[0]);}
 function updateF(el,key){fMults[key]=parseInt(el.value)/100;document.getElementById('fv-'+key).textContent=fMults[key].toFixed(2)+'×';rebuildFc();}
